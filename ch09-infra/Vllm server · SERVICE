@@ -1,0 +1,36 @@
+# vllm-server.service — vLLM을 죽어도 되살아나게 하는 systemd 유닛
+#
+# 2장 불사조 정신의 실무 버전. 죽으면 자동으로 다시 켜진다.
+# 18장(운영)과 이어짐.
+#
+# 두는 곳:  /etc/systemd/system/vllm-server.service   (Spark1)
+# 적용:
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now vllm-server
+#   journalctl -u vllm-server -f     # 로그 실시간 확인
+#
+# ⚠️ <...> 자리를 당신의 실제 값으로 바꾸세요.
+
+[Unit]
+Description=vLLM LLM server (Spark1)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=<당신의_사용자명>
+WorkingDirectory=<serve_llm.sh가_있는_경로>
+ExecStart=<serve_llm.sh가_있는_경로>/serve_llm.sh
+
+# 죽으면 되살린다 (불사조)
+Restart=always
+RestartSec=5
+
+# 종료 신호를 받으면 깔끔히 내려가도록 여유를 준다
+TimeoutStopSec=30
+
+# (선택) 가상환경을 쓴다면 PATH를 잡아준다
+# Environment=PATH=<가상환경_경로>/bin:/usr/local/bin:/usr/bin:/bin
+
+[Install]
+WantedBy=multi-user.target
