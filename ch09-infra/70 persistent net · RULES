@@ -1,0 +1,30 @@
+# 70-persistent-net.rules — 네트워크 인터페이스 이름 고정 (udev)
+#
+# 6장 "이름이 바뀌는 밤" 참고.
+#   리부팅할 때마다 커널이 PCIe 순서에 따라 인터페이스 이름을 바꿔버리는 문제
+#   (enp1s0f1np1 → enP2p1s0f1np1 처럼 한 글자가 바뀌어 설정이 다 깨진다).
+#   → 장치의 고유 주소(MAC)에 이름을 "못 박아" 흔들리지 않게 한다.
+#
+# 두는 곳:  /etc/udev/rules.d/70-persistent-net.rules   (두 대 모두)
+# 적용:
+#   sudo udevadm control --reload-rules
+#   sudo udevadm trigger
+#   (안정적으로는 재부팅 후 `ip link show`로 이름 확인)
+#
+# 내 MAC 주소 확인:
+#   ip link show        # 각 인터페이스의 link/ether xx:xx:... 를 확인
+#
+# ⚠️ 아래 <MAC>과 <원하는_이름>을 당신의 실제 값으로 바꾸세요.
+#    QSFP(ConnectX) 인터페이스를 예측 가능한 이름으로 고정하는 것이 목적입니다.
+
+# QSFP 직결 링크 (Spark 상호 연결용)
+SUBSYSTEM=="net", ACTION=="add", ATTR{address}=="<AA:BB:CC:DD:EE:FF>", NAME="qsfp0"
+
+# (선택) 바깥 인터넷용 랜 포트도 고정하고 싶다면:
+# SUBSYSTEM=="net", ACTION=="add", ATTR{address}=="<11:22:33:44:55:66>", NAME="wan0"
+
+# 참고:
+#  - NAME= 으로 직접 이름을 주는 대신, 최신 환경에서는 systemd .link 파일
+#    (/etc/systemd/network/10-qsfp.link)로 고정하는 방식을 권하기도 합니다.
+#    둘 중 자기 배포판에서 안정적으로 동작하는 쪽을 쓰세요.
+#  - 이름을 바꾸면 netplan-static-ip.yaml 의 인터페이스 이름도 같은 값으로 맞춰야 합니다.
