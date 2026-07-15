@@ -1,0 +1,32 @@
+# netplan-static-ip.yaml — 고정 IP 설정 (netplan)
+#
+# 9장 "네트워크 구성" 참고.
+#   시스템끼리 이름이 아니라 주소로 서로를 찾게 하면, 리부팅에도 흔들리지 않는다.
+#   Spark1 = 192.168.10.50, Spark2 = 192.168.10.51 로 못 박는다.
+#
+# 두는 곳:  /etc/netplan/01-static.yaml   (두 대 각각, 자기 IP로)
+# 적용:
+#   sudo netplan try      # 안전하게 시험 (되돌릴 수 있음)
+#   sudo netplan apply
+#
+# ⚠️ 인터페이스 이름(<qsfp0> 등)은 70-persistent-net.rules에서 고정한 이름과
+#    반드시 일치시켜야 합니다. `ip link show`로 확인하세요.
+#
+# 아래는 Spark1 (192.168.10.50) 예시입니다.
+# Spark2에서는 addresses를 192.168.10.51/24 로 바꾸세요.
+
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+
+    # ── 바깥 인터넷용 (평범한 유선 랜) ──
+    <wan0>:
+      dhcp4: true          # 인터넷 쪽은 DHCP로 받아도 무방
+
+    # ── 두 대를 잇는 QSFP 직결 링크 (고정) ──
+    <qsfp0>:
+      dhcp4: false
+      addresses:
+        - 192.168.10.50/24   # ← Spark2에서는 192.168.10.51/24
+      # 직결 링크에는 게이트웨이/DNS가 필요 없다 (두 대끼리만 통신)
