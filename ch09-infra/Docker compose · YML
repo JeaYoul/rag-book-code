@@ -1,0 +1,51 @@
+# docker-compose.yml — Spark2의 데이터베이스 컨테이너
+#
+# 9장 "도커와 가상화" / "무엇을 어디에 두었나" 참고.
+#   Spark2가 시스템의 몸통. 여기에 두 개의 DB를 둔다.
+#   - PostgreSQL + pgvector : 논문 메타데이터와 청크 벡터 (검색의 심장)
+#   - MongoDB               : 그림·표 같은 바이너리 (텍스트 DB와 분리)
+#
+# 컨테이너로 띄우는 이유:
+#   서로 격리되어 라이브러리를 안 건드리고, 죽어도 restart로 되살아난다.
+#   (2장 불사조 정신의 값싼 버전)
+#
+# 실행:
+#   docker compose up -d
+#   docker compose ps
+#   docker compose logs -f
+#
+# ⚠️ 비밀번호(<...>)는 실제 값으로 바꾸되, 이 파일을 그대로 커밋하지 마세요.
+#    .env 파일로 분리하고 .gitignore 에 넣는 것을 권합니다.
+
+services:
+
+  postgres:
+    image: pgvector/pgvector:pg16      # pgvector가 포함된 PostgreSQL 이미지
+    container_name: rag-postgres
+    restart: unless-stopped            # 죽어도 되살아난다
+    environment:
+      POSTGRES_USER: <db_사용자>
+      POSTGRES_PASSWORD: <db_비밀번호>
+      POSTGRES_DB: <db_이름>
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # pgvector 확장은 최초 1회 DB에서 실행:
+    #   CREATE EXTENSION IF NOT EXISTS vector;
+
+  mongodb:
+    image: mongo:7
+    container_name: rag-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: <mongo_사용자>
+      MONGO_INITDB_ROOT_PASSWORD: <mongo_비밀번호>
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+
+volumes:
+  pgdata:
+  mongodata:
