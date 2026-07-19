@@ -1,0 +1,15 @@
+# config.example.env — 복사해서 .env 로 쓰세요 (cp config.example.env .env)
+#
+# ⚠️ .env 는 절대 커밋하지 마세요. .gitignore 에 넣으세요.
+
+# PostgreSQL
+POSTGRES_USER=<db_사용자>
+POSTGRES_PASSWORD=<db_비밀번호>
+POSTGRES_DB=ragdb
+
+# MongoDB
+MONGO_USER=<mongo_사용자>
+MONGO_PASSWORD=<mongo_비밀번호>
+
+# 임베딩 벡터 차원 (쓰는 모델에 맞춰야 함. bge-m3 = 1024)
+EMBED_DIM=1024
