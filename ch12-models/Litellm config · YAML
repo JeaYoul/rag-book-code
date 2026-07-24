@@ -1,0 +1,44 @@
+# litellm_config.yaml — 흩어진 모델을 한 창구로 묶는다 (12장)
+#
+# 왜 필요한가:
+#   모델이 여기저기(Spark1 vLLM, Spark2 리랭커…) 흩어져 있으면 부르는 쪽이 번거롭다.
+#   LiteLLM이 이들을 **OpenAI 호환 표준 창구** 하나로 묶어 준다.
+#
+#   그리고 이 한 겹이 문을 연다 —
+#   세상의 개발 도구 대부분은 OpenAI 형식 API를 기대한다.
+#   내 로컬 모델을 그 형식으로 감싸면, 그 도구들에게 내 산골 서버가
+#   그냥 표준 AI 서비스로 보인다. → 클로드 코드를 내 모델에 연결할 수 있다.
+#
+# 실행:
+#   litellm --config litellm_config.yaml --port 4000
+#
+# 확인:
+#   curl -s http://localhost:4000/v1/models
+#
+# ⚠️ <...> 를 당신의 주소로 바꾸세요.
+
+model_list:
+
+  # ── 메인 LLM (Spark1의 vLLM) ────────────────────────────
+  - model_name: qwen                      # 부를 때 쓰는 이름
+    litellm_params:
+      model: openai/<vLLM의_served-model-name>   # 예: openai/qwen
+      api_base: http://<SPARK1_IP>:8000/v1       # 예: http://192.168.10.50:8000/v1
+      api_key: "dummy"                    # vLLM은 키를 검사하지 않지만 형식상 필요
+      timeout: 600                        # 긴 답변을 기다린다 (초)
+
+  # ── (선택) 작고 빠른 모델을 함께 묶고 싶다면 ──────────────
+  # - model_name: qwen-small
+  #   litellm_params:
+  #     model: openai/<작은_모델명>
+  #     api_base: http://<주소>:<포트>/v1
+  #     api_key: "dummy"
+
+litellm_settings:
+  drop_params: true       # 지원하지 않는 파라미터가 와도 죽지 않고 무시한다
+  request_timeout: 600
+
+general_settings:
+  # 외부에 열 때는 반드시 키를 설정하세요. 내부망 전용이면 생략 가능.
+  # master_key: <API_키>
+  port: 4000
