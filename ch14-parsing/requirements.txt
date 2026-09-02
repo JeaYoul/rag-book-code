@@ -1,0 +1,5 @@
+# 검증한 버전으로 못 박아라 (pip freeze 로 확인)
+lxml
+pypdf
+# pdf → nxml 조립까지 쓰려면 (12장의 파싱 모델이 함께 내려온다. 무겁다)
+# docling

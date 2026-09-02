@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 실습용: 세 번째 논문. 불사조가 두 번째 배에서 이어가는 것을 보기 위해. -->
+<article xmlns:xlink="http://www.w3.org/1999/xlink">
+  <front>
+    <article-meta>
+      <article-id pub-id-type="pmid">10000003</article-id>
+      <article-id pub-id-type="pmc">PMC000003</article-id>
+      <article-id pub-id-type="doi">10.0000/imaginary.2024.003</article-id>
+      <title-group><article-title>Glucoraphanin content of broccoli sprouts at different growth temperatures</article-title></title-group>
+      <pub-date><year>2024</year></pub-date>
+    </article-meta>
+  </front>
+  <body>
+    <p>A paragraph placed directly in the body, before any section.</p>
+    <sec><title>Methods</title><p>Sprouts were grown at 18, 22 and 26 °C.</p></sec>
+    <sec><title>Results</title><p>Glucoraphanin peaked at 22 °C.</p></sec>
+  </body>
+</article>

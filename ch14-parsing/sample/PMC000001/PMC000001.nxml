@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 실습용 가짜 논문. 진짜 nxml 의 뼈대만 흉내 냈다. -->
+<article xmlns:xlink="http://www.w3.org/1999/xlink" article-type="research-article">
+  <front>
+    <journal-meta>
+      <journal-title-group><journal-title>Journal of Imaginary Nutrition</journal-title></journal-title-group>
+    </journal-meta>
+    <article-meta>
+      <article-id pub-id-type="pmid">10000001</article-id>
+      <article-id pub-id-type="pmc">PMC000001</article-id>
+      <article-id pub-id-type="doi">10.0000/imaginary.2024.001</article-id>
+      <title-group><article-title>Sulforaphane and butyrate co-treatment inhibits HDAC activity in colon cells</article-title></title-group>
+      <pub-date pub-type="epub"><year>2024</year></pub-date>
+    </article-meta>
+  </front>
+  <body>
+    <sec id="s1">
+      <title>Introduction</title>
+      <p>Sulforaphane (SFN), derived from <italic>glucoraphanin</italic> in broccoli sprouts, activates the Nrf2 pathway.<xref ref-type="bibr" rid="B1">1</xref></p>
+      <p>Butyrate, a short-chain fatty acid produced by <italic>Clostridium butyricum</italic>, is a known HDAC inhibitor.</p>
+    </sec>
+    <sec id="s2">
+      <title>Results</title>
+      <sec id="s2a">
+        <title>Cell viability</title>
+        <p>Co-treatment reduced viability in a dose-dependent manner (Figure 1).</p>
+        <fig id="F1">
+          <label>Figure 1</label>
+          <caption><p>Dose-dependent inhibition at 10, 25 and 50 µM SFN with 1 mM butyrate.</p></caption>
+          <graphic xlink:href="fig1"/>
+        </fig>
+      </sec>
+      <sec id="s2b">
+        <title>HDAC activity</title>
+        <p>HDAC activity fell by more than half at the highest dose (Table 1).</p>
+        <table-wrap id="T1">
+          <label>Table 1</label>
+          <caption><p>Relative HDAC activity (%) after 24 h.</p></caption>
+          <table>
+            <thead><tr><th>Treatment</th><th>10 µM</th><th>25 µM</th><th>50 µM</th></tr></thead>
+            <tbody>
+              <tr><td>SFN alone</td><td>92</td><td>78</td><td>61</td></tr>
+              <tr><td>SFN + butyrate</td><td>80</td><td>55</td><td>38</td></tr>
+            </tbody>
+          </table>
+        </table-wrap>
+      </sec>
+    </sec>
+    <sec id="s3">
+      <title>Discussion</title>
+      <p>These data suggest additive HDAC inhibition.</p>
+    </sec>
+  </body>
+  <floats-group>
+    <fig id="F2">
+      <label>Figure 2</label>
+      <caption><p>Proposed mechanism: SFN via Nrf2, butyrate via HDAC.</p></caption>
+      <graphic xlink:href="fig2.png"/>
+    </fig>
+  </floats-group>
+  <back>
+    <ref-list>
+      <ref id="B1"><mixed-citation>Someone A. A very long reference title full of keywords. J Things. 2020;1:1-2.</mixed-citation></ref>
+    </ref-list>
+  </back>
+</article>

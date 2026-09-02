@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 실습용: 신원이 목록과 어긋나는 논문. 격리되어야 한다. -->
+<article xmlns:xlink="http://www.w3.org/1999/xlink">
+  <front>
+    <article-meta>
+      <article-id pub-id-type="pmc">PMC000002</article-id>
+      <article-id pub-id-type="doi">10.0000/imaginary.2019.999</article-id>
+      <title-group><article-title>An older version with a different title</article-title></title-group>
+      <pub-date><year>2019</year></pub-date>
+    </article-meta>
+  </front>
+  <body>
+    <sec><title>Results</title><p>Nothing to see here.</p></sec>
+  </body>
+</article>
