@@ -1,0 +1,5 @@
+# 검증한 버전으로 못 박아라 (pip freeze 로 확인)
+numpy
+requests
+psycopg2-binary            # --pg 로 실제 DB 에 붙을 때
+sentence-transformers      # bge-m3 임베딩 · bge-reranker 폴백 (무겁다). --fake 실습에는 필요 없다
