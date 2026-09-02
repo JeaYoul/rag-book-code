@@ -21,6 +21,8 @@ for _s in (sys.stdout, sys.stderr):
         _s.reconfigure(encoding="utf-8")
 
 RAG_TOP_K = int(os.getenv("RAG_TOP_K", 20))
+PAPERS_TABLE = os.getenv("PAPERS_TABLE", "papers")     # 실제 서버는 papers_fig
+CHUNKS_TABLE = os.getenv("CHUNKS_TABLE", "chunks")     # 실제 서버는 chunks (뷰)
 HYBRID_WEIGHT = float(os.getenv("HYBRID_WEIGHT", 0.5))   # 한국어 판 : 영어 판
 
 
@@ -38,11 +40,11 @@ class PgBackend:
         return "[" + ",".join(f"{x:.6f}" for x in v) + "]"
 
     def vector_search(self, qvec, k=RAG_TOP_K):
-        sql = """
+        sql = f"""
             SELECT c.chunk_id, c.paper_id, c.chunk_type, c.section, c.content_for_llm, p.title,
                    1 - (c.embedding <=> %s::vector) AS similarity
-            FROM chunks c JOIN papers p USING (paper_id)
-            WHERE NOT c.is_reference_section AND c.embedding IS NOT NULL
+            FROM {CHUNKS_TABLE} c JOIN {PAPERS_TABLE} p USING (paper_id)
+            WHERE COALESCE(c.is_reference_section, false) = false AND c.embedding IS NOT NULL
             ORDER BY c.embedding <=> %s::vector
             LIMIT %s"""
         with self.conn.cursor() as cur:
@@ -51,19 +53,19 @@ class PgBackend:
 
     def hybrid_vector_bm25(self, qvec, qtext, k=RAG_TOP_K, vector_weight=0.7, bm25_weight=0.3):
         """벡터 점수와 키워드 점수를 섞는다 — 실제 시스템에서는 평가(17장)에 쓴다."""
-        sql = """
+        sql = f"""
             WITH v AS (
                 SELECT chunk_id, 1 - (embedding <=> %s::vector) AS vscore
-                FROM chunks WHERE NOT is_reference_section AND embedding IS NOT NULL
+                FROM {CHUNKS_TABLE} WHERE COALESCE(is_reference_section, false) = false AND embedding IS NOT NULL
                 ORDER BY embedding <=> %s::vector LIMIT %s),
             b AS (
                 SELECT chunk_id, ts_rank_cd(content_tsv, plainto_tsquery('english', %s)) AS bscore
-                FROM chunks WHERE NOT is_reference_section
+                FROM {CHUNKS_TABLE} WHERE COALESCE(is_reference_section, false) = false
                   AND content_tsv @@ plainto_tsquery('english', %s)
                 ORDER BY bscore DESC LIMIT %s)
             SELECT c.chunk_id, c.paper_id, c.chunk_type, c.section, c.content_for_llm, p.title,
                    %s * COALESCE(v.vscore, 0) + %s * COALESCE(b.bscore, 0) AS similarity
-            FROM chunks c JOIN papers p USING (paper_id)
+            FROM {CHUNKS_TABLE} c JOIN {PAPERS_TABLE} p USING (paper_id)
             LEFT JOIN v USING (chunk_id) LEFT JOIN b USING (chunk_id)
             WHERE v.chunk_id IS NOT NULL OR b.chunk_id IS NOT NULL
             ORDER BY similarity DESC LIMIT %s"""

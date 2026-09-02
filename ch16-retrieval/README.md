@@ -41,6 +41,7 @@ python pipeline.py "설포라판과 부티르산의 HDAC 억제 효과는?" --me
 export PG_DSN=postgresql://ai_user:비밀번호@localhost:5432/ai_research_db
 export LLM_BASE_URL=http://localhost:4000/v1          # 13장의 게이트웨이
 export QWEN3_RERANKER_URL=http://localhost:8090/v1/rerank
+export PAPERS_TABLE=papers_fig                      # 실제 DB 의 논문 테이블 이름
 python pipeline.py "낙산균이 대장 염증에 미치는 효과와 기전은?" --pg --ask
 ```
 
