@@ -13,6 +13,10 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+# 윈도우 콘솔에서 한글이 깨지지 않게
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 
 def load_dotenv() -> None:
     p = Path(__file__).with_name(".env")
@@ -86,7 +90,7 @@ r = call(
     f"{BASE}/v1/chat/completions",
     {
         "model": "qwen",
-        "messages": [{"role": "user", "content": "한 단어로만 답하라: 산골"}],
+        "messages": [{"role": "user", "content": "Reply with exactly one word: mountain"}],
         "max_tokens": 20,
     },
 )
@@ -98,7 +102,7 @@ r = call(
     {
         "model": "qwen",
         "max_tokens": 20,
-        "messages": [{"role": "user", "content": "한 단어로만 답하라: 불사조"}],
+        "messages": [{"role": "user", "content": "Reply with exactly one word: phoenix"}],
     },
 )
 text = next((b.get("text", "") for b in r.get("content", []) if b.get("type") == "text"), "")

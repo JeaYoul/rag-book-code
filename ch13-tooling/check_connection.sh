@@ -62,7 +62,7 @@ echo "4. OpenAI 형식으로 한 마디"
 resp=$(curl -s --max-time 120 "$BASE/v1/chat/completions" \
   -H "Authorization: Bearer $KEY" \
   -H "Content-Type: application/json" \
-  -d '{"model":"qwen","messages":[{"role":"user","content":"한 단어로만 답하라: 산골"}],"max_tokens":20}')
+  -d '{"model":"qwen","messages":[{"role":"user","content":"Reply with exactly one word: mountain"}],"max_tokens":20}')
 if grep -q '"choices"' <<<"$resp"; then
   ok "$(sed -n 's/.*"content":"\([^"]*\)".*/\1/p' <<<"$resp" | head -c 80)"
 else
@@ -75,7 +75,7 @@ resp=$(curl -s --max-time 120 "$BASE/v1/messages" \
   -H "Authorization: Bearer $KEY" \
   -H "Content-Type: application/json" \
   -H "anthropic-version: 2023-06-01" \
-  -d '{"model":"qwen","max_tokens":20,"messages":[{"role":"user","content":"한 단어로만 답하라: 불사조"}]}')
+  -d '{"model":"qwen","max_tokens":20,"messages":[{"role":"user","content":"Reply with exactly one word: phoenix"}]}')
 if grep -q '"content"' <<<"$resp"; then
   ok "$(sed -n 's/.*"text":"\([^"]*\)".*/\1/p' <<<"$resp" | head -c 80)"
 else
