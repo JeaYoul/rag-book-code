@@ -64,7 +64,7 @@ resp=$(curl -s --max-time 120 "$BASE/v1/chat/completions" \
   -H "Content-Type: application/json" \
   -d '{"model":"qwen","messages":[{"role":"user","content":"Reply with exactly one word: mountain"}],"max_tokens":20}')
 if grep -q '"choices"' <<<"$resp"; then
-  ok "$(sed -n 's/.*"content":"\([^"]*\)".*/\1/p' <<<"$resp" | head -c 80)"
+  ok "$(sed -n 's/.*"content": *"\([^"]*\)".*/\1/p' <<<"$resp" | head -c 80)"
 else
   bad "$resp"
   exit 1
@@ -77,7 +77,7 @@ resp=$(curl -s --max-time 120 "$BASE/v1/messages" \
   -H "anthropic-version: 2023-06-01" \
   -d '{"model":"qwen","max_tokens":20,"messages":[{"role":"user","content":"Reply with exactly one word: phoenix"}]}')
 if grep -q '"content"' <<<"$resp"; then
-  ok "$(sed -n 's/.*"text":"\([^"]*\)".*/\1/p' <<<"$resp" | head -c 80)"
+  ok "$(sed -n 's/.*"text": *"\([^"]*\)".*/\1/p' <<<"$resp" | head -c 80)"
 else
   bad "$resp"
   exit 1
