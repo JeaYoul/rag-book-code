@@ -10,17 +10,19 @@ phoenix_loop.py — 죽어도 이어가는 파싱 루프 (14장 "불사조")
                                아니면 pdf_to_nxml 로 조립한 뒤 같은 파서로 (합류)
     신원이 어긋나면          → 격리
 
-체크포인트는 논문 단위:
-    /packages/<논문ID>/_DONE 가 있으면 건너뛴다
-    _DONE 없이 파일이 남아 있으면 죽다 남긴 반쪽 — 비우고 처음부터
+체크포인트는 볼륨에 둔 JSON 파일 하나 (실제 parse_59k_v2.py 와 같은 모양):
+    /packages/parsing_checkpoint.json = {"processed": [...], "failed": [...], "last_index": N}
+    논문 한 편이 끝날 때마다 다시 쓴다. 새 배는 이 파일을 읽고 끝난 논문을 건너뛴다.
+    끝난 목록에 없는데 결과 폴더가 있으면 — 죽다 남긴 반쪽이다. 비우고 처음부터.
 
-컨테이너 안에서 돌린다. 프로세스가 죽으면 도커가 다시 띄우고(run_parser.sh),
-새 프로세스는 이 파일의 첫 줄부터 다시 시작해 _DONE 을 보고 이어간다.
+컨테이너 안에서 돌린다 (run_parser.sh). 프로세스가 죽으면 셸 루프가 새 컨테이너를 띄우고,
+새 프로세스는 이 파일의 첫 줄부터 다시 시작해 체크포인트를 보고 이어간다.
 
     --exit-after N   N편을 끝내면 스스로 정상 종료한다 ("죽기 전에 스스로 죽는다")
     --crash-after N  N편을 끝낸 뒤 일부러 비정상 종료한다 (실습용 — 되살아나는 것을 눈으로 보라)
 """
 import argparse
+import gc
 import json
 import os
 import shutil
@@ -35,11 +37,35 @@ for _s in (sys.stdout, sys.stderr):
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8")
 
-DONE = "_DONE"
+CHECKPOINT_NAME = "parsing_checkpoint.json"
 
 
 def log(msg: str) -> None:
     print(time.strftime("[%H:%M:%S]"), msg, flush=True)
+
+
+def cleanup_memory() -> None:
+    """논문 한 편마다 — 2장의 그 청소. GPU 가 있으면 GPU 메모리도."""
+    gc.collect()
+    try:
+        import torch
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            torch.cuda.synchronize()
+    except ImportError:
+        pass
+
+
+def load_checkpoint(path: Path) -> dict:
+    if path.exists():
+        return json.loads(path.read_text(encoding="utf-8"))
+    return {"processed": [], "failed": [], "last_index": 0}
+
+
+def save_checkpoint(path: Path, ck: dict) -> None:
+    tmp = path.with_suffix(".json.tmp")                # 쓰다 죽어도 반쪽 JSON 이 남지 않게
+    tmp.write_text(json.dumps(ck, ensure_ascii=False, indent=2), encoding="utf-8")
+    tmp.replace(path)
 
 
 def quarantine(paper_dir: Path, qdir: Path, reason: str) -> None:
@@ -48,7 +74,7 @@ def quarantine(paper_dir: Path, qdir: Path, reason: str) -> None:
     log(f"[격리] {paper_dir.name}: {reason}")
 
 
-def find_nxml(paper_dir: Path, list_csv: Path | None, qdir: Path) -> Path | None:
+def find_nxml(paper_dir: Path, qdir: Path) -> Path | None:
     """nxml 을 돌려준다. 없으면 pdf 에서 만들어 돌려준다. 만들 수 없으면 None."""
     nxmls = sorted(paper_dir.glob("*.nxml"))
     if nxmls:
@@ -89,47 +115,56 @@ def main() -> int:
     ap.add_argument("--crash-after", type=int, default=0)
     a = ap.parse_args()
     qdir = a.quarantine or (a.packages / "_quarantine")
+    a.packages.mkdir(parents=True, exist_ok=True)
+    ck_path = a.packages / CHECKPOINT_NAME
 
     paper_dirs = sorted(d for d in a.papers.iterdir() if d.is_dir())
+    ck = load_checkpoint(ck_path)
+    done = set(ck["processed"])
+    failed = {f["pmcid"] for f in ck["failed"]}
     log(f"새 배가 뜬다 — 논문 폴더 {len(paper_dirs)}개")
-
-    done_before = sum(1 for d in paper_dirs if (a.packages / d.name / DONE).exists())
-    log(f"체크포인트: 이미 끝난 논문 {done_before}편은 건너뛴다")
+    log(f"체크포인트: 끝난 논문 {len(done)}편은 건너뛴다 · 실패 {len(failed)}편")
 
     finished = 0
-    for paper_dir in paper_dirs:
-        out = a.packages / paper_dir.name
-        if (out / DONE).exists():
-            continue                                        # 이미 끝난 논문
+    for i, paper_dir in enumerate(paper_dirs):
+        pid = paper_dir.name
+        if pid in done or pid in failed:
+            continue                                        # 이미 끝났거나 격리된 논문
+        out = a.packages / pid
         if out.exists():
-            log(f"[반쪽] {paper_dir.name}: 죽다 남긴 패키지를 비우고 다시")
+            log(f"[반쪽] {pid}: 죽다 남긴 결과를 비우고 다시")
             shutil.rmtree(out)
-        if (qdir / f"{paper_dir.name}.txt").exists():
-            continue                                        # 전에 격리한 논문
 
-        nxml = find_nxml(paper_dir, a.list, qdir)
+        nxml = find_nxml(paper_dir, qdir)
         if nxml is None:
+            ck["failed"].append({"pmcid": pid, "error": "quarantined"})
+            save_checkpoint(ck_path, ck)
             continue
         try:
             r = parse_one(nxml, out, a.list)
         except IdentityMismatch as e:
             shutil.rmtree(out, ignore_errors=True)
             quarantine(paper_dir, qdir, str(e))
+            ck["failed"].append({"pmcid": pid, "error": str(e)})
+            save_checkpoint(ck_path, ck)
             continue
 
         finished += 1
         if a.crash_after and finished >= a.crash_after:
-            log(f"[실습] {paper_dir.name} 저장 직후, _DONE 을 찍기 전에 일부러 쓰러진다 (Signal 11 흉내)")
-            os._exit(11)                                    # 반쪽 패키지가 남는다 — 다음 배가 치운다
+            log(f"[실습] {pid} 저장 직후, 체크포인트에 올리기 전에 일부러 쓰러진다 (Signal 11 흉내)")
+            os._exit(11)                                    # 끝난 목록에 없으니 다음 배가 다시 한다
 
-        (out / DONE).touch()                                # 끝났다는 표시 — 볼륨에 남는다
-        log(f"[완료] {paper_dir.name}: 문단 {r['paragraphs']} · 그림 {r['figures']} · 표 {r['tables']}")
+        ck["processed"].append(pid)                         # 끝났다는 기록 — 볼륨에 남는다
+        ck["last_index"] = i
+        save_checkpoint(ck_path, ck)
+        cleanup_memory()
+        log(f"[완료] {pid}: 문단 {r['paragraphs']} · 그림 {r['figures']} · 표 {r['tables']}")
 
         if a.exit_after and finished >= a.exit_after:
-            log(f"{finished}편 처리. 메모리가 눌러붙기 전에 스스로 내려간다 — 도커가 다시 띄운다")
+            log(f"{finished}편 처리. 메모리가 눌러붙기 전에 스스로 내려간다 — 루프가 다시 띄운다")
             return 0
 
-    log(f"전부 끝났다. 이번 배에서 {finished}편")
+    log(f"전부 끝났다. 이번 배에서 {finished}편 · 누적 {len(ck['processed'])}편")
     return 0
 
 
