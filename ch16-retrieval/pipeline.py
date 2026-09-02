@@ -56,12 +56,14 @@ def ask_llm(context, question, max_tokens=2048):
     import requests
     r = requests.post(f"{os.getenv('LLM_BASE_URL', 'http://localhost:4000/v1')}/chat/completions", json={
         "model": os.getenv("LLM_MODEL", "qwen"), "max_tokens": max_tokens, "temperature": 0.2,
+        "chat_template_kwargs": {"enable_thinking": False},
         "messages": [
             {"role": "system", "content": "다음 자료만 근거로 답하라. 자료에 없으면 모른다고 하라. 근거 번호 [n] 을 달아라."},
             {"role": "user", "content": f"[자료]\n{context}\n\n[질문]\n{question}"},
         ]}, timeout=120)
     r.raise_for_status()
-    return r.json()["choices"][0]["message"]["content"]
+    msg = r.json()["choices"][0]["message"]
+    return msg.get("content") or msg.get("reasoning_content") or "(빈 응답)"
 
 
 def main() -> int:

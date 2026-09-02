@@ -41,12 +41,15 @@ def _llm(messages, max_tokens=150, temperature=0.0, timeout=30, seed=None):
     """OpenAI 호환 chat/completions. 실패하면 None — 호출한 쪽이 규칙으로 물러선다."""
     try:
         import requests
-        body = {"model": LLM_MODEL, "messages": messages, "max_tokens": max_tokens, "temperature": temperature}
+        body = {"model": LLM_MODEL, "messages": messages, "max_tokens": max_tokens, "temperature": temperature,
+                "chat_template_kwargs": {"enable_thinking": False}}     # Qwen 추론 모델 — 생각을 끈다
         if seed is not None:
             body["seed"] = seed
         r = requests.post(f"{LLM_BASE_URL}/chat/completions", json=body, timeout=timeout)
         r.raise_for_status()
-        return r.json()["choices"][0]["message"]["content"].strip()
+        msg = r.json()["choices"][0]["message"]
+        text = msg.get("content") or msg.get("reasoning_content") or ""   # content 가 비면 reasoning_content 에
+        return text.strip() or None
     except Exception:
         return None
 

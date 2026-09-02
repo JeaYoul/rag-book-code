@@ -41,7 +41,7 @@ class PgBackend:
 
     def vector_search(self, qvec, k=RAG_TOP_K):
         sql = f"""
-            SELECT c.chunk_id, c.paper_id, c.chunk_type, c.section, c.content_for_llm, p.title,
+            SELECT c.chunk_id, c.paper_id, c.chunk_type, c.section, COALESCE(NULLIF(c.content_for_llm, ''), c.content) AS body, p.title,
                    1 - (c.embedding <=> %s::vector) AS similarity
             FROM {CHUNKS_TABLE} c JOIN {PAPERS_TABLE} p USING (paper_id)
             WHERE COALESCE(c.is_reference_section, false) = false AND c.embedding IS NOT NULL
@@ -63,7 +63,7 @@ class PgBackend:
                 FROM {CHUNKS_TABLE} WHERE COALESCE(is_reference_section, false) = false
                   AND content_tsv @@ plainto_tsquery('english', %s)
                 ORDER BY bscore DESC LIMIT %s)
-            SELECT c.chunk_id, c.paper_id, c.chunk_type, c.section, c.content_for_llm, p.title,
+            SELECT c.chunk_id, c.paper_id, c.chunk_type, c.section, COALESCE(NULLIF(c.content_for_llm, ''), c.content) AS body, p.title,
                    %s * COALESCE(v.vscore, 0) + %s * COALESCE(b.bscore, 0) AS similarity
             FROM {CHUNKS_TABLE} c JOIN {PAPERS_TABLE} p USING (paper_id)
             LEFT JOIN v USING (chunk_id) LEFT JOIN b USING (chunk_id)
