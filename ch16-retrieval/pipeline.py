@@ -45,7 +45,7 @@ def enhanced_search(question, backend, encoder, top_k=5, use_llm=True, reranker=
 
 
 def build_context(chunks):
-    """LLM 에 건넬 글 — 머리글 없는 본문(content_for_llm) + 출처 번호."""
+    """LLM 에 건넬 글 — 조각 본문 + 출처 번호. (content_for_llm 은 실제 DB 에서 비어 있어 content 를 쓴다)"""
     return "\n\n".join(f"[{i + 1}] {c.get('paper_title', '')} — {c.get('section', '')}\n{c['content']}"
                        for i, c in enumerate(chunks))
 
