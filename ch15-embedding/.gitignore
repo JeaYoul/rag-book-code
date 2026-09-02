@@ -1,0 +1,4 @@
+packages/
+chunks/
+embedded/
+__pycache__/

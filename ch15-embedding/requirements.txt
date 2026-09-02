@@ -1,0 +1,4 @@
+# 검증한 버전으로 못 박아라 (pip freeze 로 확인)
+sentence-transformers      # bge-m3 를 불러 쓴다 (torch 가 함께 내려온다 — 무겁다)
+psycopg2-binary            # PostgreSQL 적재
+# --fake 로 흐름만 실습할 때는 psycopg2-binary 만 있어도 된다
