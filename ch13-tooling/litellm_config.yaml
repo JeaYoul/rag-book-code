@@ -1,0 +1,33 @@
+# LiteLLM 게이트웨이 설정 — 13장
+#
+# 하는 일은 한 줄이다.
+#   "qwen 이라는 이름으로 부르면, Spark1의 vLLM으로 넘겨라."
+#
+# 클로드 코드는 Anthropic 메시지 형식으로 /v1/messages 에 보내고,
+# LiteLLM이 그것을 OpenAI 형식으로 바꿔 vLLM의 /v1/chat/completions 로 건넨다.
+# 돌아온 답은 다시 Anthropic 형식으로 되돌려 준다. 통역사다.
+
+model_list:
+  # 메인 LLM — Spark1(192.168.10.50)의 vLLM. served-model-name=qwen
+  - model_name: qwen
+    litellm_params:
+      model: openai/qwen                        # "OpenAI 호환 서버의 qwen" 이라는 뜻
+      api_base: http://192.168.10.50:8000/v1    # 반드시 http:// 부터
+      api_key: not-needed                       # vLLM은 열쇠를 안 보지만, 빈칸이면 도구가 투덜댄다
+
+  # 클로드 코드가 기본으로 부르는 모델 이름(claude-...)도 전부 qwen으로 받는다.
+  # env.sh 에서 ANTHROPIC_MODEL=qwen 을 주면 이 항목은 없어도 되지만, 안전망으로 둔다.
+  - model_name: "claude-*"
+    litellm_params:
+      model: openai/qwen
+      api_base: http://192.168.10.50:8000/v1
+      api_key: not-needed
+
+litellm_settings:
+  drop_params: true          # vLLM이 모르는 매개변수는 조용히 버린다 (형식 차이로 죽지 않게)
+  request_timeout: 600       # 긴 코드 생성은 오래 걸린다. 넉넉히.
+
+general_settings:
+  # 게이트웨이 문을 여는 열쇠. 클로드 코드의 ANTHROPIC_AUTH_TOKEN 과 같아야 한다.
+  # 값은 .env 의 LITELLM_MASTER_KEY 에서 읽는다. 여기에 직접 적지 마라.
+  master_key: os.environ/LITELLM_MASTER_KEY

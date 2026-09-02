@@ -1,0 +1,24 @@
+# systemd 유닛 — 게이트웨이를 부팅 때 띄우고, 죽으면 되살린다 (불사조의 값싼 버전).
+#
+#   sudo cp litellm-gateway.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now litellm-gateway
+#   systemctl status litellm-gateway
+#
+# 경로·사용자·가상환경은 당신 서버에 맞게 바꿔라.
+
+[Unit]
+Description=LiteLLM gateway (Claude Code -> local vLLM)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=npk_star
+WorkingDirectory=/home/npk_star/rag-book-code/ch13-tooling
+EnvironmentFile=/home/npk_star/rag-book-code/ch13-tooling/.env
+ExecStart=/home/npk_star/venvs/gateway/bin/litellm --config litellm_config.yaml --host 0.0.0.0 --port 4000
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
