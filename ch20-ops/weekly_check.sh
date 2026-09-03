@@ -14,8 +14,8 @@ DEFAULT="litellm-qwen qwen3-reranker mcpo rag-bot bionemo-app streamlit-rag entr
 UNITS="${*:-${UNITS:-$DEFAULT}}"
 
 echo "=== 실패한 것이 있는가 ==========================================="
-systemctl list-units --failed --no-pager --no-legend || true
-echo "(위가 비어 있으면 실패한 서비스 없음)"
+failed=$(systemctl list-units --failed --no-pager --no-legend 2>/dev/null || true)
+if [ -n "$failed" ]; then echo "$failed"; else echo "없음"; fi
 
 echo; echo "=== 재시작 횟수 — 서비스의 체온 ==================================="
 printf "%-22s %-10s %-12s %-6s %s\n" "서비스" "상태" "정책" "재시작" "마지막 기동"
@@ -31,12 +31,22 @@ for u in $UNITS; do
   printf "%-22s %-10s %-12s %-6s %s%s\n" "$u" "$state" "${policy:-?}" "${nres:-0}" "${since:-(없음)}" "$mark"
 done
 echo "<-- 표시가 있으면, 그 서비스가 죽은 시각과 다른 서비스를 멈춘 시각을 나란히 놓고 봐라."
+echo "   journalctl -u A -u B --no-pager | grep -E 'Started|Stopped|Scheduled restart' | tail -30"
 
 echo; echo "=== 지난 7일의 오류 =============================================="
+any_err=0
 for u in $UNITS; do
-  n=$(journalctl -u "$u" --since "7 days ago" -p err --no-pager 2>/dev/null | grep -c . || true)
-  [ "${n:-0}" -gt 0 ] && { echo "--- $u ($n 줄) ---"; journalctl -u "$u" --since "7 days ago" -p err --no-pager | tail -5; }
+  # "-- No entries --" 같은 안내문은 오류가 아니다. 그것까지 세면 전부 1줄로 나온다
+  errs=$(journalctl -u "$u" --since "7 days ago" -p err --no-pager 2>/dev/null | grep -v '^-- ' || true)
+  n=$(printf '%s' "$errs" | grep -c . || true)
+  if [ "${n:-0}" -gt 0 ]; then
+    any_err=1
+    echo "--- $u ($n 줄) ---"
+    printf '%s
+' "$errs" | tail -5
+  fi
 done
+[ "$any_err" = "0" ] && echo "지난 7일 오류 없음"
 
 echo; echo "=== 로그가 얼마나 남아 있는가 ====================================="
 journalctl --disk-usage 2>/dev/null
