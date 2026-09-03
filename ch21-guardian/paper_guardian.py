@@ -20,6 +20,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import notify              # noqa: E402
 from notify import send   # noqa: E402
 
 EUTILS = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
@@ -117,6 +118,8 @@ def main():
     ap.add_argument("--fake", action="store_true", help="바깥 API 없이 흐름만")
     a = ap.parse_args()
     FAKE = a.fake
+    if FAKE:
+        notify.force_dry("--fake 는 실제로 보내지 않는다")
 
     seen, groups = set(), []
     for name, term in TOPICS:

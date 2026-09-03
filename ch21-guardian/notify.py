@@ -40,8 +40,21 @@ def _env():
     return out
 
 
+def force_dry(reason=""):
+    """시연·연습에서는 절대 밖으로 나가지 않게 잠근다.
+
+    이것이 없어서 사고가 났다. 시연 모드로 돌렸는데 서버에는 토큰 파일이 있었고,
+    가짜 상태 전이가 진짜 알림이 되어 휴대폰으로 갔다.
+    보내는 코드를 시험할 때는, 보내지 않는 것이 기본값이어야 한다.
+    """
+    global DRY
+    DRY = True
+    if reason:
+        print(f"[연습 모드 고정] {reason}")
+
+
 def send(text: str) -> bool:
-    """텔레그램으로 한 통. 토큰이 없거나 GUARDIAN_DRY=1 이면 화면에 찍고 끝낸다."""
+    """텔레그램으로 한 통. 토큰이 없거나 DRY 면 화면에 찍고 끝낸다."""
     env = _env()
     token, chat = env.get("TELEGRAM_TOKEN"), env.get("TELEGRAM_CHAT_ID")
     if DRY or not token or not chat:

@@ -18,6 +18,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import notify                                                  # noqa: E402
 from notify import diff_bool, load_state, save_state, send   # noqa: E402
 
 # (표시명, 방식, 대상)  — 실제 시스템에서는 열 개다. 여기서는 뼈대만
@@ -56,6 +57,7 @@ def main():
     a = ap.parse_args()
 
     if a.demo:
+        notify.force_dry("--demo 는 실제로 보내지 않는다")
         _demo()
         return 0
 

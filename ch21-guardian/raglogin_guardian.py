@@ -19,6 +19,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import notify                                      # noqa: E402
 from notify import load_state, save_state, send   # noqa: E402
 
 
@@ -65,6 +66,7 @@ def main():
     ap.add_argument("--demo", action="store_true")
     a = ap.parse_args()
     if a.demo:
+        notify.force_dry("--demo 는 실제로 보내지 않는다")
         _demo()
         return 0
 

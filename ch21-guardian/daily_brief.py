@@ -19,6 +19,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import notify              # noqa: E402
 from notify import send   # noqa: E402
 
 API = "https://api.open-meteo.com/v1/forecast"
@@ -75,6 +76,8 @@ def main():
     ap.add_argument("--place", default="담양 용면")
     ap.add_argument("--fake", action="store_true")
     a = ap.parse_args()
+    if a.fake:
+        notify.force_dry("--fake 는 실제로 보내지 않는다")
 
     f = forecast(a.lat, a.lon, a.fake)
     facts = (f"{a.place} · 최고 {f['hi']}도 최저 {f['lo']}도 · "
