@@ -42,8 +42,7 @@ for u in $UNITS; do
   if [ "${n:-0}" -gt 0 ]; then
     any_err=1
     echo "--- $u ($n 줄) ---"
-    printf '%s
-' "$errs" | tail -5
+    printf '%s\n' "$errs" | tail -5
   fi
 done
 [ "$any_err" = "0" ] && echo "지난 7일 오류 없음"
