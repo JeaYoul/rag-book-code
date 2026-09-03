@@ -1,0 +1,9 @@
+# 검증한 버전으로 못 박아라 (pip freeze 로 확인)
+streamlit
+bcrypt
+python-docx
+python-pptx
+reportlab                  # PDF (한글 글꼴 필요). 없으면 HTML 로 물러선다
+psycopg2-binary            # PostgreSQL 에 붙을 때. SQLite 실습에는 필요 없다
+numpy
+requests
