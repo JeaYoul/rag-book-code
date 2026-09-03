@@ -1,0 +1,5 @@
+# 검증한 버전으로 못 박아라 (pip freeze 로 확인)
+requests
+numpy                       # 15·16장 코드를 빌린다
+# rdkit                     # analyze_molecule 을 제대로 하려면 (없으면 원자 수만 센다)
+# mcp                       # 실제 서버는 공식 SDK 로 — 이 예제는 규약만 흉내 냈다

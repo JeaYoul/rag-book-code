@@ -1,0 +1,18 @@
+{
+  "_comment": "mcpo --config mcpo-config.json --port 8000 --host 0.0.0.0  — MCP 서버들을 평범한 HTTP API 로 (19장 'MCPO로 묶기'). 바깥 프로그램용 창구. 검색 앱은 클라이언트를 직접 부른다.",
+  "mcpServers": {
+    "papers": {
+      "command": "python",
+      "args": ["/home/npk_star/rag-book-code/ch19-agentic/mcp_server_papers.py"]
+    },
+    "alphafold": {
+      "command": "node",
+      "args": ["/home/npk_star/ai-rag-platform/AlphaFold-MCP-Server/build/index.js"]
+    },
+    "ncbi": {
+      "type": "streamable-http",
+      "url": "http://localhost:8787/mcp",
+      "_comment": "이미 떠 있는 HTTP 서버를 붙일 때. 경로는 그 서버가 정한 대로"
+    }
+  }
+}
