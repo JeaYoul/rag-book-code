@@ -1,0 +1,36 @@
+# guardian.cron.example — 파수꾼을 시계에 건다 (21장)
+#
+#   설치:  crontab -l > /tmp/c ; cat guardian.cron.example >> /tmp/c ; crontab /tmp/c
+#   확인:  crontab -l
+#   ★ 넣기 전에 crontab -l 로 같은 줄이 이미 있는지 봐라.
+#     실제 운영 크론에 login_guardian 이 두 줄 들어가 있었다. 5분마다 두 번씩 돌고 알림도 두 통씩 왔다.
+#
+# 크론에서 가장 많이 걸리는 함정: 인터프리터를 절대경로로 적어야 한다.
+#   crontab 은 로그인 셸의 PATH 를 물려받지 않는다.
+#   `python` 이라고만 쓰면 conda 환경이 아니라 시스템 파이썬이 잡혀 import 부터 실패한다.
+#   which python 으로 나온 그 경로를 그대로 적어라.
+
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin
+
+# 아래 PY 와 DIR 를 자기 환경에 맞게 바꾼다
+# PY=/home/사용자/miniconda3/envs/chem/bin/python
+# DIR=/home/사용자/rag-book-code/ch21-guardian
+
+# 5분마다 — 열 곳을 두드려 보고, 달라졌을 때만 부른다
+*/5 * * * *   /home/사용자/miniconda3/envs/chem/bin/python /home/사용자/rag-book-code/ch21-guardian/health_guardian.py   >> $HOME/guardian.log 2>&1
+
+# 5분마다 — 누가 서버에 들어왔는가
+*/5 * * * *   /home/사용자/miniconda3/envs/chem/bin/python /home/사용자/rag-book-code/ch21-guardian/login_guardian.py    >> $HOME/guardian.log 2>&1
+
+# 5분마다 — 앱 로그인·실패·잠금
+*/5 * * * *   /home/사용자/miniconda3/envs/chem/bin/python /home/사용자/rag-book-code/ch21-guardian/raglogin_guardian.py >> $HOME/guardian.log 2>&1
+
+# 매일 아침 — 이 하나만 아무 일이 없어도 말한다
+30 6 * * *    /home/사용자/miniconda3/envs/chem/bin/python /home/사용자/rag-book-code/ch21-guardian/daily_brief.py       >> $HOME/guardian.log 2>&1
+
+# 월요일 아침 — 지난주의 새 논문
+0 8 * * 1     /home/사용자/miniconda3/envs/chem/bin/python /home/사용자/rag-book-code/ch21-guardian/paper_guardian.py    >> $HOME/guardian.log 2>&1
+
+# 로그가 쌓인다. ch20-ops/logrotate/guardian 을 함께 넣어라.
+# 42일에 348,859줄 25MB까지 자란 적이 있다.

@@ -1,0 +1,4 @@
+# 검증한 버전으로 못 박아라 (pip freeze 로 확인)
+requests
+psycopg2-binary     # raglogin_guardian 만 필요
+# 텔레그램 라이브러리는 쓰지 않는다 — 주소 하나에 POST 하면 끝이다
