@@ -114,9 +114,10 @@ def flag_uncited_claims(answer, min_chars=100):
     막지는 못한다. 다만 사람 눈에 띄게 한다. 이것이 검증되지 않은 대목이다."""
     flagged = []
     for para in answer.split("\n\n"):
-        body = para.strip()
-        if len(body) >= min_chars and not re.search(r"PMC\d+", body) and not body.startswith("#"):
-            flagged.append(body[:60].replace("\n", " "))
+        lines = [ln for ln in para.strip().splitlines() if not ln.lstrip().startswith(("#", "|", "---"))]
+        body = " ".join(ln.strip() for ln in lines).strip()      # 제목·표는 빼고 설명하는 줄만 본다
+        if len(body) >= min_chars and not re.search(r"PMC\d+", body):
+            flagged.append(body[:60])
     return flagged
 
 
