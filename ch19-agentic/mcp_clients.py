@@ -21,7 +21,7 @@ class StdioMcpClient:
 
     def _start(self):
         self.proc = subprocess.Popen(self.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                     stderr=subprocess.DEVNULL, text=True, encoding="utf-8", bufsize=1)
+                                     stderr=None, text=True, encoding="utf-8", bufsize=1)   # stderr 는 그대로 보인다 — 서버가 왜 죽었는지 알아야 한다
         self._send("initialize", {})
 
     def _send(self, method, params):
@@ -31,9 +31,12 @@ class StdioMcpClient:
         self._id += 1
         self.proc.stdin.write(json.dumps({"jsonrpc": "2.0", "id": self._id, "method": method, "params": params}) + "\n")
         self.proc.stdin.flush()
-        line = self.proc.stdout.readline()
-        if not line:
-            raise RuntimeError("서버가 응답 없이 끊겼다")
+        while True:                                              # JSON 이 아닌 줄(라이브러리가 찍은 잡음)은 건너뛴다
+            line = self.proc.stdout.readline()
+            if not line:
+                raise RuntimeError("서버가 응답 없이 끊겼다 (stderr 를 보라)")
+            if line.lstrip().startswith("{"):
+                break
         resp = json.loads(line)
         if "error" in resp:
             raise RuntimeError(resp["error"]["message"])

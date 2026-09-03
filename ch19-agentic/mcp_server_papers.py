@@ -19,9 +19,11 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-for _s in (sys.stdin, sys.stdout):                       # 통로가 글자라서 — 양쪽 다 UTF-8 로 못 박는다
+for _s in (sys.stdin, sys.stdout, sys.stderr):           # 통로가 글자라서 — 전부 UTF-8 로 못 박는다
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8")
+PROTO_OUT = sys.stdout                                   # 표준출력은 규약 전용. 모델 로딩 메시지 따위가 섞이면 클라이언트가 JSON 을 못 읽는다
+sys.stdout = sys.stderr                                  # 그래서 print 는 전부 stderr 로 보낸다 (Spark2 에서 실제로 겪었다)
 sys.path.insert(0, str(HERE.parent / "ch16-retrieval"))
 sys.path.insert(0, str(HERE.parent / "ch15-embedding"))
 
@@ -89,8 +91,8 @@ def serve_stdio(tools):
         if not line:
             continue
         resp = handle(json.loads(line), tools)
-        sys.stdout.write(json.dumps(resp, ensure_ascii=False) + "\n")
-        sys.stdout.flush()
+        PROTO_OUT.write(json.dumps(resp, ensure_ascii=False) + "\n")
+        PROTO_OUT.flush()
 
 
 def serve_http(tools, port):

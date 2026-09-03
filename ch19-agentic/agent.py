@@ -144,7 +144,9 @@ def run_agentic_search(question, llm, servers, progress=print):
                     result = servers[_server_of(name)].call_tool(name, args)
                 except Exception as e:
                     result = json.dumps({"error": f"{type(e).__name__}: {e}"}, ensure_ascii=False)
-                progress(f"   → {name}({json.dumps(args, ensure_ascii=False)[:60]})  {calls_used}/{TOOL_BUDGET}")
+                mark = "✗" if result.startswith('{"error"') else "→"
+                progress(f"   {mark} {name}({json.dumps(args, ensure_ascii=False)[:60]})  {calls_used}/{TOOL_BUDGET}")
+                progress(f"       ↳ {result[:90].replace(chr(10), ' ')}")          # 도구가 뭐라 했는지 — 빈 결과도 보여야 한다
                 if name == "search_papers":
                     allowed_ids.update(re.findall(r"PMC\d+", result))   # 인용 허용 목록
             history.append({"name": name, "arguments": args, "result": result[:500]})
