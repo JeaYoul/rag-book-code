@@ -56,10 +56,21 @@ class PaperTools:
                  "score": round(c.get("rerank_score", 0), 3), "snippet": c["content"][:300]} for c in res["merged_chunks"]]
 
     def get_paper_details(self, paper_id):
-        if hasattr(self.backend, "chunks"):
+        if hasattr(self.backend, "chunks"):                      # MemoryBackend
             hits = [c for c in self.backend.chunks if c["paper_id"] == paper_id]
             return {"paper_id": paper_id, "chunks": [{"section": c.get("section", ""), "content": c["content"][:500]} for c in hits[:10]]}
-        return {"paper_id": paper_id, "note": "PgBackend: 실제 서버는 papers_fig/chunks 에서 읽는다"}
+        import search as S                                        # PgBackend — 진짜 표에서 읽는다
+        sql = f"""SELECT p.title, c.section, COALESCE(NULLIF(c.content_for_llm, ''), c.content)
+                  FROM {S.CHUNKS_TABLE} c JOIN {S.PAPERS_TABLE} p USING (paper_id)
+                  WHERE c.paper_id = %s AND COALESCE(c.is_reference_section, false) = false
+                  ORDER BY c.chunk_id LIMIT 10"""
+        with self.backend.conn.cursor() as cur:
+            cur.execute(sql, (paper_id,))
+            rows = cur.fetchall()
+        if not rows:
+            return {"paper_id": paper_id, "error": "그런 논문이 없다 — search_papers 가 돌려준 id 만 쓴다"}
+        return {"paper_id": paper_id, "title": rows[0][0] or "",
+                "chunks": [{"section": r[1] or "", "content": (r[2] or "")[:500]} for r in rows]}
 
 
 # ---------------------------------------------------------------- JSON-RPC

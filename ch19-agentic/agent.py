@@ -35,6 +35,8 @@ AGENT_SYSTEM_PROMPT = """[★★★ 절대 규칙 — 다른 모든 지시보다
 2. 수치를 추측·보간·생성하지 않는다. 위반 시 보고서 전체 무효.
 3. 답에 인용하는 [논문N]은 반드시 search_papers 가 돌려준 paper_id 여야 한다. 기억 속 논문을 인용하지 않는다.
 4. 인용한 논문의 결론과 어긋나는 주장을 하지 않는다. 사전 지식과 논문이 다르면 논문이 이긴다.
+5. 근거를 찾지 못한 자리는 비워 둔다. "이론적으로는" "일반적으로 알려진" 같은 말로 기억을 채워 넣지 않는다.
+   못 찾았으면 못 찾았다고 한 문장으로 끝내고, 다음에 무엇을 검색하면 되는지를 "추가 탐색 제안"에 쓴다.
 
 [도구 호출 전략]
 질문을 받으면 먼저 4~5개의 영어 키워드 서브쿼리로 분해하라 (서로 다른 관점: 분자 메커니즘 / 세포·면역 / 임상 / 시너지).
@@ -98,12 +100,25 @@ class FakeLLM:
         answer = (f"## 답\n설포라판과 부티르산은 각각 HDAC 를 억제한다는 근거가 있다 {cites}. "
                   f"병용 시너지에 관한 직접 근거는 검색된 범위에서 찾지 못했다.\n"
                   f"이 문장은 검색되지 않은 논문을 인용한다 [PMC9999999].\n"           # 가드가 잡아야 한다
-                  f"## 도킹\n도구가 이렇게 말했다: 결합 자세 신뢰도 0.62 — 맞는지는 사람이 확인한다.\n"
+                  f"## 도킹\n도구가 이렇게 말했다: 결합 자세 신뢰도 0.62 — 맞는지는 사람이 확인한다.\n\n"
+                  f"이론적으로는 두 물질이 서로 다른 아형에 작용해 시너지를 낼 수 있다. 이 문단에는 인용이 하나도 없다. "
+                  f"모델이 기억으로 채운 자리다. 규칙 5 가 잡아야 할 대목이고, 실제 Spark2 실행에서도 이런 문단이 나왔다.\n\n"
                   f"## 추가 탐색 제안\n1. 병용 in vivo 연구 2. 클래스 I HDAC 선택성 3. 용량 반응")
         return {"content": answer, "tool_calls": [], "raw": None}
 
 
 # ---------------------------------------------------------------- 가드
+
+def flag_uncited_claims(answer, min_chars=100):
+    """절대 규칙 5 를 코드로 — 인용 없이 길게 설명하는 문단을 찾아 표시한다.
+    막지는 못한다. 다만 사람 눈에 띄게 한다. 이것이 검증되지 않은 대목이다."""
+    flagged = []
+    for para in answer.split("\n\n"):
+        body = para.strip()
+        if len(body) >= min_chars and not re.search(r"PMC\d+", body) and not body.startswith("#"):
+            flagged.append(body[:60].replace("\n", " "))
+    return flagged
+
 
 def validate_citations(answer, allowed_ids):
     """절대 규칙 3 을 코드로 — search_papers 가 돌려주지 않은 PMC 인용은 표시한다."""
@@ -130,7 +145,8 @@ def run_agentic_search(question, llm, servers, progress=print):
         reply = llm.chat(messages, schemas)
         if not reply["tool_calls"]:                                   # 더 부를 것이 없으면 답
             answer, bad = validate_citations(reply["content"], allowed_ids)
-            return {"answer": answer, "invalid_citations": bad, "tool_calls": history, "iterations": iteration, "server_status": status}
+            return {"answer": answer, "invalid_citations": bad, "uncited_claims": flag_uncited_claims(answer),
+                    "tool_calls": history, "iterations": iteration, "server_status": status}
         messages.append({"role": "assistant", "content": reply["content"] or None,
                          "tool_calls": [{"id": c["id"], "type": "function", "function": {"name": c["name"], "arguments": json.dumps(c["arguments"])}} for c in reply["tool_calls"]]})
         for call in reply["tool_calls"]:
@@ -151,8 +167,8 @@ def run_agentic_search(question, llm, servers, progress=print):
                     allowed_ids.update(re.findall(r"PMC\d+", result))   # 인용 허용 목록
             history.append({"name": name, "arguments": args, "result": result[:500]})
             messages.append({"role": "tool", "tool_call_id": call["id"], "name": name, "content": result[:6000]})
-    return {"answer": "(반복 한도에 닿았다 — 지금까지의 도구 결과만 있다)", "invalid_citations": [], "tool_calls": history,
-            "iterations": MAX_ITERATIONS, "server_status": status}
+    return {"answer": "(반복 한도에 닿았다 — 지금까지의 도구 결과만 있다)", "invalid_citations": [], "uncited_claims": [],
+            "tool_calls": history, "iterations": MAX_ITERATIONS, "server_status": status}
 
 
 def _server_of(tool_name):
@@ -183,6 +199,8 @@ def main():
         print(f"  {h['name']:26s} {json.dumps(h['arguments'], ensure_ascii=False)[:50]}")
     if res["invalid_citations"]:
         print(f"⚠ 검색되지 않은 인용 {res['invalid_citations']} — 무효 표시함")
+    for c in res["uncited_claims"]:
+        print(f"⚠ 근거 없이 긴 문단: {c} …")                       # 규칙 5 — 막지 못한다, 눈에 띄게 할 뿐
     print("\n" + res["answer"])
     return 0
 
