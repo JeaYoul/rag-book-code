@@ -1,0 +1,20 @@
+[
+  {"id": "sulfo-01", "category": "sulforaphane",
+   "question": "설포라판은 어떻게 Nrf2 경로를 활성화하나요?",
+   "ground_truth": "설포라판은 Keap1의 시스테인 잔기를 변형시켜 Nrf2를 방출하고, 핵으로 이동하여 항산화 반응 요소(ARE) 유전자를 활성화합니다."},
+  {"id": "sulfo-02", "category": "sulforaphane",
+   "question": "설포라판의 주요 식이 공급원은 무엇인가요?",
+   "ground_truth": "설포라판은 십자화과 채소, 특히 글루코라파닌이 고농도로 함유된 브로콜리 새싹에서 발견됩니다."},
+  {"id": "buty-01", "category": "butyrate",
+   "question": "부티르산은 어떤 기전으로 HDAC를 억제하나요?",
+   "ground_truth": "부티르산은 클래스 I 및 II HDAC의 활성을 억제하여 히스톤 아세틸화를 증가시키고 유전자 발현을 조절합니다."},
+  {"id": "buty-02", "category": "butyrate",
+   "question": "낙산균(Clostridium butyricum)은 장에서 무엇을 생성하나요?",
+   "ground_truth": "낙산균은 장내에서 식이섬유를 발효하여 단쇄지방산인 부티르산(부티레이트)을 생성합니다."},
+  {"id": "scfa-01", "category": "scfa",
+   "question": "단쇄지방산은 장 상피 세포에 어떤 영향을 미치나요?",
+   "ground_truth": "단쇄지방산, 특히 부티레이트는 대장 상피 세포의 주요 에너지원이며 장벽 기능을 강화하고 염증을 억제합니다."},
+  {"id": "scfa-02", "category": "scfa",
+   "question": "단쇄지방산과 설포라판의 공통된 작용 기전은 무엇인가요?",
+   "ground_truth": "부티레이트와 설포라판은 모두 HDAC 억제 활성을 가져 후성유전학적으로 유전자 발현을 조절합니다."}
+]

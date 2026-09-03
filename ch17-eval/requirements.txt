@@ -1,0 +1,5 @@
+# 16장 · 15장 의 코드를 불러 쓴다 (같은 저장소 안에서 상대 경로로)
+numpy
+requests
+psycopg2-binary            # --pg
+sentence-transformers      # 진짜 bge-m3 · bge 리랭커. --fake 실습에는 필요 없다
