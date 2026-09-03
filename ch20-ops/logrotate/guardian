@@ -1,0 +1,22 @@
+# /etc/logrotate.d/guardian — 파수꾼 로그를 자른다 (20장 모니터링)
+#
+# 넣기 전:  42일에 348,859줄 25MB. 지우는 장치도 도는 장치도 없었다.
+# 설치:     sudo cp guardian /etc/logrotate.d/guardian
+# 시늉:     sudo logrotate -d /etc/logrotate.d/guardian     ← 파일을 건드리지 않는다
+# 강제 1회: sudo logrotate -f /etc/logrotate.d/guardian
+# 되돌리기: sudo rm /etc/logrotate.d/guardian
+
+/home/npk_star/guardian.log {
+    weekly              # 주마다 한 번
+    rotate 8            # 여덟 개까지 = 두 달 치
+    compress            # 오래된 것은 압축
+    delaycompress       # 방금 자른 것은 다음 회차에 압축 (아직 쓰고 있을 수 있다)
+    missingok           # 파일이 없어도 오류로 보지 않는다
+    notifempty          # 빈 파일은 자르지 않는다
+    copytruncate        # 파일을 옮기지 않고 내용만 비운다 — 이어 쓰기로 여는 프로그램에 안전
+    su npk_star npk_star
+}
+
+# 이것은 절반짜리 처방이다.
+# 자르는 것은 디스크를 지킬 뿐, 35만 줄 중 대부분이 "이상 없음"인 문제는 그대로다.
+# 근본은 파수꾼이 상태가 바뀔 때만 쓰고 하루 한 줄만 남기게 하는 것 (21장).

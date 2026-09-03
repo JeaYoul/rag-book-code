@@ -1,0 +1,28 @@
+# guardian.cron.example — 파수꾼 크론 본보기 (20·21장)
+#   설치:  crontab -l > /tmp/c; cat guardian.cron.example >> /tmp/c; crontab /tmp/c
+#   확인:  crontab -l
+#
+# 20장에서 실제 크론을 보고 배운 것 셋:
+#   1) 같은 줄이 두 번 들어가 있었다 — 5분마다 두 번씩 돌고 알림도 두 번 왔다.
+#      손으로 편집하는 파일에서 가장 흔한 사고다. 넣기 전에 crontab -l 로 중복을 봐라.
+#   2) 로그가 42일에 25MB까지 자랐다 — logrotate/guardian 설정을 함께 넣어라.
+#   3) 5분마다 "이상 없음"이 오면 사람은 곧 읽지 않는다.
+#      좋은 알림은 평소에 조용하고 이상할 때만 운다.
+
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin
+
+# 5분마다 — 기계와 모델이 살아 있는가
+*/5 * * * *   cd $HOME && python health_guardian.py   >> $HOME/guardian.log 2>&1
+
+# 5분마다 — 누가 들어왔는가 (한 줄만! 중복 주의)
+*/5 * * * *   cd $HOME && python login_guardian.py    >> $HOME/guardian.log 2>&1
+
+# 매일 아침 — 하루 한 번의 요약
+30 6 * * *    cd $HOME && python weather_guardian.py  >> $HOME/guardian.log 2>&1
+
+# 월요일 아침 — 지난주의 새 논문
+0 8 * * 1     cd $HOME && python ncbi_guardian.py     >> $HOME/guardian.log 2>&1
+
+# 매일 새벽 3시 — 백업 (20장에서 없다고 확인한 그것)
+0 3 * * *     BACKUP_DIR=/mnt/backup/rag $HOME/rag-book-code/ch20-ops/backup_db.sh >> $HOME/backup.log 2>&1

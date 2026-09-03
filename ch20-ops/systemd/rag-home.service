@@ -1,0 +1,30 @@
+; rag-home.service — 앱 하나에 파일 하나 (20장 규칙 1)
+; 설치:  sudo cp rag-home.service /etc/systemd/system/
+;        sudo systemctl daemon-reload && sudo systemctl enable --now rag-home
+
+[Unit]
+Description=RAG main app (8501)
+After=network.target postgresql.service mongod.service
+Wants=postgresql.service mongod.service
+; After = 순서만 · Wants = 같이 띄우되 실패해도 나는 뜬다 · Requires = 함께 죽는다(정말 필요할 때만)
+StartLimitIntervalSec=60
+StartLimitBurst=3
+; 되살림의 제동 — 1분에 3번 넘으면 포기한다 (규칙 4)
+
+[Service]
+Type=simple
+; forking 이 아니다. 프로그램을 직접 띄운다 — systemd 가 자기 자식을 끝까지 붙든다
+User=npk_star
+WorkingDirectory=/home/npk_star/ai-rag-platform/src
+Environment=PYTHONPATH=/home/npk_star/ai-rag-platform
+ExecStart=/home/npk_star/.local/bin/streamlit run Home.py --server.port 8501 --server.address 0.0.0.0
+; ExecStop 이 없다. systemd 가 제어 그룹째 정확히 죽인다 (규칙 2)
+Restart=on-failure
+RestartSec=15
+; 내가 자주 고치고 다시 띄우는 앱이라 on-failure. 손으로 끈 것은 되살리지 않는다 (규칙 3)
+MemoryMax=8G
+TimeoutStartSec=300
+; 시스템 메모리 울타리. GPU 메모리는 여기 걸리지 않는다 — 그것은 코드 안에서 막는다 (규칙 6)
+
+[Install]
+WantedBy=multi-user.target

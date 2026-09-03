@@ -1,0 +1,20 @@
+; rag-gateway.service — 13장의 LiteLLM 게이트웨이 (4000)
+
+[Unit]
+Description=LiteLLM gateway (4000)
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+[Service]
+Type=simple
+User=npk_star
+WorkingDirectory=/home/npk_star
+ExecStart=/home/npk_star/litellm-env/bin/litellm --config /home/npk_star/litellm_qwen.yaml --port 4000
+Restart=always
+RestartSec=5
+MemoryMax=4G
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,14 @@
+# /etc/systemd/journald.conf — 로그가 얼마나 남는지 직접 정한다 (20장 규칙 7)
+#
+# 기본값에 맡겼더니 상한이 2.5GB였고, 두 주 남짓만 남았다.
+# 그래서 7월에 있었던 장애의 기록이 지금 남아 있지 않다.
+# 되짚을 수 있었던 것은 코드 저장소의 커밋 메시지 덕분이었다.
+#
+# 적용:  sudo systemctl restart systemd-journald
+# 확인:  journalctl --disk-usage  ·  journalctl --list-boots
+
+[Journal]
+Storage=persistent      # 재부팅해도 남긴다 (/var/log/journal 이 있어야 한다)
+SystemMaxUse=8G         # 디스크 사정에 맞게. 로그는 저장 공간과 바꾸는 값이다
+MaxRetentionSec=90day   # 석 달치
+SystemMaxFileSize=256M

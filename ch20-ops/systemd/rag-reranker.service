@@ -1,0 +1,22 @@
+; rag-reranker.service — 늘 떠 있어야 하는 것 (20장 규칙 3)
+; 사람이 껐다면 실수일 가능성이 높다. 그래서 always.
+
+[Unit]
+Description=Reranker server (8090)
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+[Service]
+Type=simple
+User=npk_star
+WorkingDirectory=/home/npk_star/ai-rag-platform
+ExecStart=/home/npk_star/miniconda3/envs/chem/bin/python /home/npk_star/ai-rag-platform/src/qwen3_reranker_server.py
+Restart=always
+RestartSec=5
+MemoryMax=32G
+; GPU 메모리 폭주는 이 값으로 못 막는다. 문서 수 상한 · 청크 분할 · 캐시 끄기는 서버 코드 안에 있다 (16·20장)
+
+[Install]
+WantedBy=multi-user.target
