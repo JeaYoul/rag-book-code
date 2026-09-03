@@ -1,0 +1,2 @@
+psycopg2-binary
+sentence-transformers    # search_internal.py 를 실제 DB로 돌릴 때만
